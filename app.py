@@ -8,7 +8,8 @@ from PIL import Image
 # Import DB functions
 from db import init_db, get_user, create_user, add_points, get_leaderboard, photo_hash_exists, add_photo_hash
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
+
 
 # YOLO model path
 MODEL_PATH = "weights/best.pt"
@@ -156,9 +157,13 @@ def leaderboard():
     ]
     return jsonify(leaderboard_data)
 
+@app.route("/")
+def home():
+    return app.send_static_file("index.html")
+
 if __name__ == "__main__":
     # Initialize DB on startup (creates 'users' table if needed)
-    init_db()
+    #init_db()
 
     # Run the Flask server
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, port=5001)
