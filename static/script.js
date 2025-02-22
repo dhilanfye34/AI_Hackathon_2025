@@ -1,23 +1,42 @@
-// script.js
+// static/script.js
 
-// DOM elements
-const registerSection = document.getElementById("register-section");
+// Global variable to hold the image blob (from live capture or file upload)
+let imageBlob = null;
+
+// -----------------------
+// Registration Section
+// -----------------------
 const registerButton = document.getElementById("register-button");
 const registerStatus = document.getElementById("register-status");
 const usernameInput = document.getElementById("username-input");
 
-const classifySection = document.getElementById("classify-section");
-const classifyForm = document.getElementById("classify-form");
-const classifyUsername = document.getElementById("classify-username");
-const classifyResult = document.getElementById("classify-result");
+// -----------------------
+// Live Camera Elements
+// -----------------------
+const video = document.getElementById("video");
+const captureButton = document.getElementById("capture-button");
 
-const leaderboardSection = document.getElementById("leaderboard-section");
-const leaderboardButton = document.getElementById("refresh-leaderboard");
+// -----------------------
+// File Upload Elements
+// -----------------------
+const fileInput = document.getElementById("file-input");
+
+// -----------------------
+// Classification and Upload Elements
+// -----------------------
+const classifySection = document.getElementById("classify-section");
+const uploadBtn = document.getElementById("upload-btn");
+
+// -----------------------
+// Result and Leaderboard Elements
+// -----------------------
+const resultEl = document.getElementById("result");
+const refreshLeaderboardButton = document.getElementById("refresh-leaderboard");
 const leaderboardTableBody = document.querySelector("#leaderboard-table tbody");
 
-// ======================================================
-// 1. REGISTER A NEW USER
-// ======================================================
+// =======================
+// 1. Register a New User
+// =======================
 registerButton.addEventListener("click", async () => {
   const username = usernameInput.value.trim();
   if (!username) {
@@ -26,7 +45,6 @@ registerButton.addEventListener("click", async () => {
     return;
   }
 
-  // Send POST /register with JSON {username: "xyz"}
   try {
     const response = await fetch("/register", {
       method: "POST",
@@ -36,17 +54,14 @@ registerButton.addEventListener("click", async () => {
 
     const data = await response.json();
     if (!response.ok) {
-      // error from server
       registerStatus.textContent = data.error || "Registration error";
       registerStatus.style.color = "red";
     } else {
       registerStatus.textContent = data.message;
       registerStatus.style.color = "green";
-
-      // Fill classify section's username
-      classifyUsername.value = username;
-      // Show classify section
-      classifySection.classList.remove("hidden");
+      // Optionally, disable the registration section
+      usernameInput.disabled = true;
+      registerButton.disabled = true;
     }
   } catch (error) {
     registerStatus.textContent = "Network or server error: " + error;
@@ -54,57 +69,91 @@ registerButton.addEventListener("click", async () => {
   }
 });
 
-// ======================================================
-// 2. CLASSIFY AN IMAGE
-// ======================================================
-classifyForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+// =======================
+// 2. Live Camera Capture Setup
+// =======================
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(stream => {
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch(err => {
+      console.error("Error accessing camera: ", err);
+    });
+}
 
-  const user = classifyUsername.value.trim();
-  const fileInput = document.getElementById("image-file");
-  if (!fileInput.files.length) {
-    classifyResult.textContent = "No file selected.";
+captureButton.addEventListener("click", () => {
+  // Create a temporary canvas to capture the video frame
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // Convert the canvas image to a JPEG Blob
+  canvas.toBlob(blob => {
+    imageBlob = blob;
+    resultEl.textContent = "Live photo captured.";
+    classifySection.classList.remove("hidden");
+  }, "image/jpeg");
+});
+
+// =======================
+// 3. File Upload from Gallery
+// =======================
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    imageBlob = file;
+    resultEl.textContent = "Image selected from gallery.";
+    classifySection.classList.remove("hidden");
+  }
+});
+
+// =======================
+// 4. Upload Image for Classification
+// =======================
+uploadBtn.addEventListener("click", async () => {
+  const username = usernameInput.value.trim();
+  if (!username) {
+    resultEl.textContent = "Please enter a username.";
     return;
   }
-
-  // Prepare form-data: username + file
+  if (!imageBlob) {
+    resultEl.textContent = "No image captured or selected.";
+    return;
+  }
   const formData = new FormData();
-  formData.append("username", user);
-  formData.append("file", fileInput.files[0]);
+  formData.append("username", username);
+  // Append the image blob with a filename; ensure it has a .jpg extension
+  formData.append("file", imageBlob, "upload.jpg");
 
   try {
     const response = await fetch("/classify", {
       method: "POST",
-      body: formData,
+      body: formData
     });
-
     const data = await response.json();
     if (!response.ok) {
-      // If server returned an error
-      classifyResult.textContent = "Error: " + (data.error || response.statusText);
+      resultEl.textContent = "Error: " + (data.error || response.statusText);
     } else {
-      // Display predictions + message
-      classifyResult.textContent = JSON.stringify(data, null, 2);
-      // Optionally refresh leaderboard
+      resultEl.textContent = JSON.stringify(data, null, 2);
       fetchLeaderboard();
     }
   } catch (err) {
-    classifyResult.textContent = "Error: " + err;
+    resultEl.textContent = "Error: " + err;
   }
 });
 
-// ======================================================
-// 3. LEADERBOARD
-// ======================================================
-leaderboardButton.addEventListener("click", () => {
-  fetchLeaderboard();
-});
+// =======================
+// 5. Leaderboard
+// =======================
+refreshLeaderboardButton.addEventListener("click", fetchLeaderboard);
 
 async function fetchLeaderboard() {
   try {
     const response = await fetch("/leaderboard");
     const data = await response.json();
-    // Clear existing rows
     leaderboardTableBody.innerHTML = "";
     data.forEach((user, index) => {
       const tr = document.createElement("tr");
@@ -127,9 +176,4 @@ async function fetchLeaderboard() {
   }
 }
 
-// ======================================================
-// OPTIONAL: AUTO-REFRESH LEADERBOARD ON PAGE LOAD
-// ======================================================
-window.addEventListener("DOMContentLoaded", () => {
-  fetchLeaderboard();
-});
+window.addEventListener("DOMContentLoaded", fetchLeaderboard);

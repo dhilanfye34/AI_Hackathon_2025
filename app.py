@@ -2,9 +2,11 @@ import os
 import uuid
 from flask import Flask, request, jsonify
 from ultralytics import YOLO
+from hashing import compute_file_hash
+from PIL import Image
 
 # Import DB functions
-from db import init_db, get_user, create_user, add_points, get_leaderboard
+from db import init_db, get_user, create_user, add_points, get_leaderboard, photo_hash_exists, add_photo_hash
 
 app = Flask(__name__)
 
@@ -46,48 +48,72 @@ def register_user():
         "user_id": user_id
     })
 
+def convert_to_jpeg(filepath):
+    """
+    Opens an image from 'filepath', and if its format is not JPEG,
+    converts and saves it as a JPEG. Returns the new file path.
+    """
+    try:
+        im = Image.open(filepath)
+    except Exception as e:
+        raise Exception("Could not open image for conversion: " + str(e))
+
+    # If the image is already JPEG, return the original filepath
+    if im.format == "JPEG":
+        return filepath
+
+    # Convert the image to RGB (required for JPEG) and save as JPEG
+    new_filepath = os.path.splitext(filepath)[0] + ".jpg"
+    rgb_im = im.convert("RGB")
+    rgb_im.save(new_filepath, "JPEG")
+
+    # Optionally, remove the original file to save space:
+    os.remove(filepath)
+
+    return new_filepath
+
 @app.route("/classify", methods=["POST"])
 def classify_image():
-    """
-    Form-data:
-      - 'username' (the user's name)
-      - 'file' (the image to classify)
-    After inference, user is awarded points (e.g., +1).
-    Returns JSON with predictions and a message.
-    """
     if model is None:
-        return jsonify({
-            "error": "Model not loaded. Ensure 'best.pt' is in 'weights/' folder."
-        }), 500
+        return jsonify({"error": "Model not loaded."}), 500
 
     username = request.form.get("username")
     if not username:
-        return jsonify({"error": "Missing 'username' in form-data"}), 400
+        return jsonify({"error": "Missing 'username'"}), 400
 
-    # Check user in DB
     user_record = get_user(username)
     if not user_record:
-        return jsonify({"error": f"User '{username}' does not exist. Please register first."}), 400
+        return jsonify({"error": f"User '{username}' not found. Please register first."}), 400
 
-    # Check file
     if "file" not in request.files:
-        return jsonify({"error": "No 'file' field in form-data"}), 400
+        return jsonify({"error": "No 'file' field"}), 400
 
     file = request.files["file"]
     if file.filename == "":
-        return jsonify({"error": "Empty filename"}), 400
+        return jsonify({"error": "No file selected"}), 400
 
-    # Save temporarily
+    # Save file temporarily
     os.makedirs("temp", exist_ok=True)
     temp_filename = str(uuid.uuid4()) + "_" + file.filename
     temp_filepath = os.path.join("temp", temp_filename)
     file.save(temp_filepath)
 
     try:
-        # Inference
-        results = model.predict(source=temp_filepath)
-        predictions = []
+        # Convert the uploaded image to JPEG if necessary
+        converted_filepath = convert_to_jpeg(temp_filepath)
 
+        # Compute the file hash on the converted image
+        file_hash = compute_file_hash(converted_filepath)
+
+        if photo_hash_exists(file_hash):
+            return jsonify({
+                "predictions": [],
+                "message": "Duplicate image detected - no points awarded."
+            })
+
+        # Run YOLO inference on the JPEG image
+        results = model.predict(source=converted_filepath)
+        predictions = []
         for r in results:
             for box in r.boxes:
                 class_idx = int(box.cls[0])
@@ -100,19 +126,20 @@ def classify_image():
                     "bbox": [float(x1), float(y1), float(x2), float(y2)]
                 })
 
-        # Award points
+        # Save the new hash and award points
+        add_photo_hash(file_hash, username)
         add_points(username, 1)
 
         return jsonify({
             "predictions": predictions,
             "message": f"1 point awarded to '{username}'"
         })
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if os.path.exists(temp_filepath):
-            os.remove(temp_filepath)
+        # Clean up: Remove the temporary converted file if it exists
+        if os.path.exists(converted_filepath):
+            os.remove(converted_filepath)
 
 @app.route("/leaderboard", methods=["GET"])
 def leaderboard():

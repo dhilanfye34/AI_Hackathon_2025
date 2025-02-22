@@ -1,3 +1,4 @@
+<!-- static/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,21 +23,33 @@
       <p id="register-status"></p>
     </section>
 
-    <!-- Classification Section -->
+    <!-- Live Camera Capture Section -->
+    <section id="camera-section">
+      <h2>Live Camera Capture</h2>
+      <video id="video" autoplay playsinline width="320" height="240"></video>
+      <button id="capture-button">Capture Photo</button>
+    </section>
+
+    <!-- File Upload Section (Gallery) -->
+    <section id="file-upload-section">
+      <h2>Or Choose from Your Gallery</h2>
+      <div class="input-group">
+        <label for="file-input">Select Image:</label>
+        <!-- 'capture' hints to use the camera by default on some devices -->
+        <input type="file" id="file-input" name="file" accept="image/*" capture="environment" />
+      </div>
+    </section>
+
+    <!-- Upload Section -->
     <section id="classify-section" class="hidden">
-      <h2>Classify an Image</h2>
-      <form id="classify-form">
-        <div class="input-group">
-          <label for="classify-username">Username:</label>
-          <input type="text" id="classify-username" readonly />
-        </div>
-        <div class="input-group">
-          <label for="image-file">Image:</label>
-          <input type="file" id="image-file" accept="image/*" required />
-        </div>
-        <button type="submit">Upload & Classify</button>
-      </form>
-      <pre id="classify-result"></pre>
+      <h2>Upload for Classification</h2>
+      <button id="upload-btn">Upload Image</button>
+    </section>
+
+    <!-- Result Display -->
+    <section id="result-section">
+      <h2>Classification Result</h2>
+      <pre id="result"></pre>
     </section>
 
     <!-- Leaderboard Section -->
@@ -52,7 +65,7 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Filled dynamically by script.js -->
+          <!-- Filled dynamically -->
         </tbody>
       </table>
     </section>

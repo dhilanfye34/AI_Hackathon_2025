@@ -1,24 +1,32 @@
-/* Basic styling for layout, forms, and tables */
+/* static/style.css */
 
+/* General styles */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f5f5f5;
     color: #333;
+    padding: 1em;
   }
   
   header, footer {
     background: #007bff;
     color: #fff;
-    padding: 1em;
     text-align: center;
+    padding: 1em;
   }
   
   main {
-    padding: 1em 2em;
     max-width: 800px;
     margin: 0 auto;
     background: #fff;
+    padding: 1em;
+    border-radius: 4px;
+  }
+  
+  /* Section styling */
+  section {
+    margin-bottom: 2em;
   }
   
   .hidden {
@@ -29,6 +37,7 @@ body {
     margin-top: 0;
   }
   
+  /* Input group */
   .input-group {
     margin-bottom: 1em;
   }
@@ -39,6 +48,7 @@ body {
     font-weight: bold;
   }
   
+  /* Buttons */
   button {
     background: #007bff;
     color: #fff;
@@ -52,13 +62,15 @@ body {
     background: #0056b3;
   }
   
-  #classify-result {
+  /* Result display */
+  #result {
     background: #eee;
     padding: 1em;
-    margin-top: 1em;
     overflow-x: auto;
+    white-space: pre-wrap;
   }
   
+  /* Leaderboard table */
   table {
     border-collapse: collapse;
     width: 100%;
@@ -79,6 +91,5 @@ body {
   #register-status {
     margin-top: 0.5em;
     font-weight: bold;
-    color: #d60000; /* Red for errors, updated in script.js on success or error */
   }
   
