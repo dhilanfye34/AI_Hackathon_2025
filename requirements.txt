@@ -1,0 +1,16 @@
+# requirements.txt
+
+Flask==2.3.2
+ultralytics==8.3.78
+
+# PyTorch ecosystem:
+torch==2.6.0
+torchvision==0.21.0
+torchaudio==2.6.0
+
+numpy==1.26.0
+Pillow==10.0.0
+
+# Feel free to add any other libs you need below:
+# e.g. requests==2.31.0
+# e.g. opencv-python==4.8.0.76
