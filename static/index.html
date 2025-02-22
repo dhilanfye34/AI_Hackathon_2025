@@ -1,40 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>Trash Detector</title>
+  <meta charset="UTF-8" />
+  <title>Gamified Trash Detector</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Trash Detector</h1>
-  <form id="upload-form">
-    <input type="file" id="image-input" name="file" accept="image/*" required/>
-    <button type="submit">Upload</button>
-  </form>
-  <pre id="results"></pre>
+  <header>
+    <h1>Gamified Trash Detector</h1>
+  </header>
 
-  <script>
-    const form = document.getElementById('upload-form');
-    const resultsEl = document.getElementById('results');
+  <main>
+    <!-- Registration Section -->
+    <section id="register-section">
+      <h2>Register</h2>
+      <div class="input-group">
+        <label for="username-input">Username:</label>
+        <input type="text" id="username-input" placeholder="Enter username" />
+      </div>
+      <button id="register-button">Register</button>
+      <p id="register-status"></p>
+    </section>
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fileInput = document.getElementById('image-input');
-      if (!fileInput.files.length) return;
+    <!-- Classification Section -->
+    <section id="classify-section" class="hidden">
+      <h2>Classify an Image</h2>
+      <form id="classify-form">
+        <div class="input-group">
+          <label for="classify-username">Username:</label>
+          <input type="text" id="classify-username" readonly />
+        </div>
+        <div class="input-group">
+          <label for="image-file">Image:</label>
+          <input type="file" id="image-file" accept="image/*" required />
+        </div>
+        <button type="submit">Upload & Classify</button>
+      </form>
+      <pre id="classify-result"></pre>
+    </section>
 
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
+    <!-- Leaderboard Section -->
+    <section id="leaderboard-section">
+      <h2>Leaderboard</h2>
+      <button id="refresh-leaderboard">Refresh Leaderboard</button>
+      <table id="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Username</th>
+            <th>Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filled dynamically by script.js -->
+        </tbody>
+      </table>
+    </section>
+  </main>
 
-      try {
-        const response = await fetch('/classify', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await response.json();
-        resultsEl.textContent = JSON.stringify(data, null, 2);
-      } catch (error) {
-        resultsEl.textContent = 'Error: ' + error;
-      }
-    });
-  </script>
+  <footer>
+    <p>&copy; 2025 Gamified Trash Detector</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>

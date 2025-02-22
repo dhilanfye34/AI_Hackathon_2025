@@ -1,42 +1,135 @@
-const uploadForm = document.getElementById("upload-form");
-const fileInput = document.getElementById("file-input");
-const outputDiv = document.getElementById("output");
+// script.js
 
-uploadForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
+// DOM elements
+const registerSection = document.getElementById("register-section");
+const registerButton = document.getElementById("register-button");
+const registerStatus = document.getElementById("register-status");
+const usernameInput = document.getElementById("username-input");
 
-  if (!fileInput.files.length) {
-    outputDiv.textContent = "No file selected.";
+const classifySection = document.getElementById("classify-section");
+const classifyForm = document.getElementById("classify-form");
+const classifyUsername = document.getElementById("classify-username");
+const classifyResult = document.getElementById("classify-result");
+
+const leaderboardSection = document.getElementById("leaderboard-section");
+const leaderboardButton = document.getElementById("refresh-leaderboard");
+const leaderboardTableBody = document.querySelector("#leaderboard-table tbody");
+
+// ======================================================
+// 1. REGISTER A NEW USER
+// ======================================================
+registerButton.addEventListener("click", async () => {
+  const username = usernameInput.value.trim();
+  if (!username) {
+    registerStatus.textContent = "Please enter a username.";
+    registerStatus.style.color = "red";
     return;
   }
 
-  // Prepare the form data
+  // Send POST /register with JSON {username: "xyz"}
+  try {
+    const response = await fetch("/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      // error from server
+      registerStatus.textContent = data.error || "Registration error";
+      registerStatus.style.color = "red";
+    } else {
+      registerStatus.textContent = data.message;
+      registerStatus.style.color = "green";
+
+      // Fill classify section's username
+      classifyUsername.value = username;
+      // Show classify section
+      classifySection.classList.remove("hidden");
+    }
+  } catch (error) {
+    registerStatus.textContent = "Network or server error: " + error;
+    registerStatus.style.color = "red";
+  }
+});
+
+// ======================================================
+// 2. CLASSIFY AN IMAGE
+// ======================================================
+classifyForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const user = classifyUsername.value.trim();
+  const fileInput = document.getElementById("image-file");
+  if (!fileInput.files.length) {
+    classifyResult.textContent = "No file selected.";
+    return;
+  }
+
+  // Prepare form-data: username + file
   const formData = new FormData();
+  formData.append("username", user);
   formData.append("file", fileInput.files[0]);
 
   try {
-    // POST to /classify (Flask endpoint)
     const response = await fetch("/classify", {
       method: "POST",
       body: formData,
     });
 
-    if (!response.ok) {
-      // If the response is not 2xx, handle error
-      const errorData = await response.json();
-      outputDiv.textContent = `Error: ${errorData.error || response.statusText}`;
-      return;
-    }
-
-    // If successful, parse JSON
     const data = await response.json();
-    // Display or process detection results
-    outputDiv.textContent = JSON.stringify(data, null, 2);
-
-    // Example: If you want to handle bounding boxes, you'd parse data.predictions
-    // and overlay them on an image, etc.
-
-  } catch (error) {
-    outputDiv.textContent = `Error: ${error.message}`;
+    if (!response.ok) {
+      // If server returned an error
+      classifyResult.textContent = "Error: " + (data.error || response.statusText);
+    } else {
+      // Display predictions + message
+      classifyResult.textContent = JSON.stringify(data, null, 2);
+      // Optionally refresh leaderboard
+      fetchLeaderboard();
+    }
+  } catch (err) {
+    classifyResult.textContent = "Error: " + err;
   }
+});
+
+// ======================================================
+// 3. LEADERBOARD
+// ======================================================
+leaderboardButton.addEventListener("click", () => {
+  fetchLeaderboard();
+});
+
+async function fetchLeaderboard() {
+  try {
+    const response = await fetch("/leaderboard");
+    const data = await response.json();
+    // Clear existing rows
+    leaderboardTableBody.innerHTML = "";
+    data.forEach((user, index) => {
+      const tr = document.createElement("tr");
+      const rankTd = document.createElement("td");
+      const userTd = document.createElement("td");
+      const pointsTd = document.createElement("td");
+
+      rankTd.textContent = index + 1;
+      userTd.textContent = user.username;
+      pointsTd.textContent = user.points;
+
+      tr.appendChild(rankTd);
+      tr.appendChild(userTd);
+      tr.appendChild(pointsTd);
+
+      leaderboardTableBody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error("Failed to fetch leaderboard:", error);
+  }
+}
+
+// ======================================================
+// OPTIONAL: AUTO-REFRESH LEADERBOARD ON PAGE LOAD
+// ======================================================
+window.addEventListener("DOMContentLoaded", () => {
+  fetchLeaderboard();
 });
