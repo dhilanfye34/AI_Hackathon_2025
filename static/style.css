@@ -1,0 +1,28 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f4f4f4;
+  }
+  
+  h1 {
+    color: #333;
+    margin-bottom: 15px;
+  }
+  
+  form {
+    margin-bottom: 20px;
+  }
+  
+  label {
+    margin-right: 8px;
+  }
+  
+  #output {
+    white-space: pre-wrap; /* Allows multi-line JSON display */
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    max-width: 600px;
+    overflow-x: auto;
+  }
+  
