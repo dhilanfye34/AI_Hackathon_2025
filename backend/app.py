@@ -1,6 +1,7 @@
 import os
 import uuid
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from ultralytics import YOLO
 from hashing import compute_file_hash
 from PIL import Image
@@ -9,7 +10,7 @@ from PIL import Image
 from db import init_db, get_user, create_user, add_points, get_leaderboard, photo_hash_exists, add_photo_hash
 
 app = Flask(__name__, static_folder="static")
-
+CORS(app)
 
 # YOLO model path
 MODEL_PATH = "weights/best.pt"
