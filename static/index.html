@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Trash Detector</title>
+</head>
+<body>
+  <h1>Trash Detector</h1>
+  <form id="upload-form">
+    <input type="file" id="image-input" name="file" accept="image/*" required/>
+    <button type="submit">Upload</button>
+  </form>
+  <pre id="results"></pre>
+
+  <script>
+    const form = document.getElementById('upload-form');
+    const resultsEl = document.getElementById('results');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('image-input');
+      if (!fileInput.files.length) return;
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      try {
+        const response = await fetch('/classify', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        resultsEl.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultsEl.textContent = 'Error: ' + error;
+      }
+    });
+  </script>
+</body>
+</html>
