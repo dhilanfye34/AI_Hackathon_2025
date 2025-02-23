@@ -7,7 +7,7 @@ function HomePage() {
       <div className="eco-card p-8">
         <h1 className="text-4xl font-bold text-eco-green-800 mb-4 flex items-center">
           <Leaf className="w-8 h-8 mr-3 text-eco-green-500" />
-          Welcome to Eco Image Classifier
+          Welcome to RecyclEye
         </h1>
         <p className="text-lg text-gray-600 leading-relaxed">
           Join our eco-conscious community in exploring and identifying images through
