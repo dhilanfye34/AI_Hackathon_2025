@@ -1,0 +1,12 @@
+# Treat all JS/TS/HTML/CSS as text, convert CRLF → LF on commit
+*.js   text eol=lf
+*.ts   text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+
+# Binary files (images, etc.) not converted
+*.png binary
+*.jpg binary
+
+# Avoid messing with node_modules
+node_modules/* -text
