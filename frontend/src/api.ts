@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000'; // Adjust this to match your Flask backend URL
+const API_BASE_URL = 'http://localhost:5001'; // Adjust this to match your Flask backend URL
 
 export async function getLeaderboard() {
   const response = await fetch(`${API_BASE_URL}/leaderboard`);
