@@ -13,7 +13,7 @@ app = Flask(__name__, static_folder="static")
 CORS(app)
 
 # YOLO model path
-MODEL_PATH = "weights/best.pt"
+MODEL_PATH = "train20/weights/best.pt"
 try:
     model = YOLO(MODEL_PATH)
     print("YOLO model loaded successfully.")
