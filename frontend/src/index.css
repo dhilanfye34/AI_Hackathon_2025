@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-eco-green-50 bg-leaf-pattern;
+  }
+}
+
+.eco-card {
+  @apply bg-white/90 backdrop-blur-sm shadow-lg rounded-xl border border-eco-green-200
+         hover:shadow-xl transition-all duration-300 ease-in-out
+         hover:border-eco-green-300;
+}
+
+.eco-button {
+  @apply px-4 py-2 bg-eco-green-500 text-white rounded-lg 
+         hover:bg-eco-green-600 transition-all duration-200
+         disabled:bg-eco-green-200 disabled:cursor-not-allowed
+         shadow-sm hover:shadow-md
+         transform hover:-translate-y-0.5;
+}
+
+.eco-input {
+  @apply px-3 py-2 border border-eco-green-200 rounded-lg
+         focus:ring-2 focus:ring-eco-green-300 focus:border-eco-green-300
+         outline-none transition-all duration-200
+         bg-white/80 backdrop-blur-sm;
+}
+
+.eco-hover-effect {
+  @apply transform transition-transform duration-200 hover:-translate-y-1;
+}
